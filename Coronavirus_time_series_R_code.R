@@ -31,3 +31,17 @@ us_cases_ts <- us_cases_ts %>% group_by(., Province_State) %>%
 us_deaths_ts <- us_deaths_ts %>% group_by(., Province_State) %>%
   summarize_all(., sum) %>%
   ungroup(.)
+
+###Collapsing Global data by country or region
+#First removing unnecessary columns
+drop <- c("Province.State", "Lat", "Long")
+global_cases_ts <- global_cases_ts[, !(names(global_cases_ts) %in% drop)]
+global_deaths_ts <- global_deaths_ts[, !(names(global_deaths_ts) %in% drop)]
+
+#Then aggregating by country or region for all other columns
+global_cases_ts <- global_cases_ts %>% group_by(., Country.Region) %>%
+  summarize_all(., sum) %>%
+  ungroup(.)
+global_deaths_ts <- global_deaths_ts %>% group_by(., Country.Region) %>%
+  summarize_all(., sum) %>%
+  ungroup(.)

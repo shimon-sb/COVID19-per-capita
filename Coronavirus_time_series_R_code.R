@@ -32,6 +32,24 @@ us_deaths_ts <- us_deaths_ts %>% group_by(., Province_State) %>%
   summarize_all(., sum) %>%
   ungroup(.)
 
+# Create variables indexing days for calculation
+today = ncol(us_cases_ts)
+c_1da = today - 1
+c_7da = today - 7
+c_14da = today - 14
+c_30da = today - 30
+
+# Calculate increases for day, week, two weeks and month
+us_cases_ts$daily_increase = us_cases_ts[, today] - us_cases_ts[, c_1da]
+us_cases_ts$weekly_increase = us_cases_ts[, today] - us_cases_ts[, c_7da]
+us_cases_ts$two_week_increase = us_cases_ts[, today] - us_cases_ts[, c_14da]
+us_cases_ts$monthly_increase = us_cases_ts[, today] - us_cases_ts[, c_30da]
+
+us_deaths_ts$daily_increase = us_deaths_ts[, today] - us_deaths_ts[, c_1da]
+us_deaths_ts$weekly_increase = us_deaths_ts[, today] - us_deaths_ts[, c_7da]
+us_deaths_ts$two_week_increase = us_deaths_ts[, today] - us_deaths_ts[, c_14da]
+us_deaths_ts$monthly_increase = us_deaths_ts[, today] - us_deaths_ts[, c_30da]
+
 ###Collapsing Global data by country or region
 #First removing unnecessary columns
 drop <- c("Province.State", "Lat", "Long")
@@ -45,3 +63,14 @@ global_cases_ts <- global_cases_ts %>% group_by(., Country.Region) %>%
 global_deaths_ts <- global_deaths_ts %>% group_by(., Country.Region) %>%
   summarize_all(., sum) %>%
   ungroup(.)
+
+# Calculate increases for day, week, two weeks and month
+global_cases_ts$daily_increase = global_cases_ts[, today] - global_cases_ts[, c_1da]
+global_cases_ts$weekly_increase = global_cases_ts[, today] - global_cases_ts[, c_7da]
+global_cases_ts$two_week_increase = global_cases_ts[, today] - global_cases_ts[, c_14da]
+global_cases_ts$monthly_increase = global_cases_ts[, today] - global_cases_ts[, c_30da]
+
+global_deaths_ts$daily_increase = global_deaths_ts[, today] - global_deaths_ts[, c_1da]
+global_deaths_ts$weekly_increase = global_deaths_ts[, today] - global_deaths_ts[, c_7da]
+global_deaths_ts$two_week_increase = global_deaths_ts[, today] - global_deaths_ts[, c_14da]
+global_deaths_ts$monthly_increase = global_deaths_ts[, today] - global_deaths_ts[, c_30da]

@@ -50,6 +50,15 @@ us_deaths_ts$weekly_increase = us_deaths_ts[, today] - us_deaths_ts[, c_7da]
 us_deaths_ts$two_week_increase = us_deaths_ts[, today] - us_deaths_ts[, c_14da]
 us_deaths_ts$monthly_increase = us_deaths_ts[, today] - us_deaths_ts[, c_30da]
 
+# Creating display-friendly versions of the US data sets
+display_vars <- c("Province_State", "daily_increase", "weekly_increase",
+                  "two_week_increase", "monthly_increase")
+us_cases_display <- us_cases_ts[display_vars]
+
+display_vars <- c("Province_State", "Population", "daily_increase", "weekly_increase",
+                  "two_week_increase", "monthly_increase")
+us_deaths_display <- us_deaths_ts[display_vars]
+
 ###Collapsing Global data by country or region
 #First removing unnecessary columns
 drop <- c("Province.State", "Lat", "Long")
@@ -74,3 +83,10 @@ global_deaths_ts$daily_increase = global_deaths_ts[, today] - global_deaths_ts[,
 global_deaths_ts$weekly_increase = global_deaths_ts[, today] - global_deaths_ts[, c_7da]
 global_deaths_ts$two_week_increase = global_deaths_ts[, today] - global_deaths_ts[, c_14da]
 global_deaths_ts$monthly_increase = global_deaths_ts[, today] - global_deaths_ts[, c_30da]
+
+# Creating display-friendly versions of the global data sets
+display_vars <- c("Country.Region", "daily_increase", "weekly_increase",
+                  "two_week_increase", "monthly_increase")
+
+global_cases_display <- global_cases_ts[display_vars]
+global_deaths_display <- global_deaths_ts[display_vars]

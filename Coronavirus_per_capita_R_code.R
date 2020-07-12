@@ -108,6 +108,10 @@ names(us_pop) <- c("State", "Population")
 us_pop <- us_pop[2:57,]
 us_pop$State <- sub("U.S. Virgin Islands", "Virgin Islands", us_pop$State)
 
+#Removing bracketed notes from the population figures using the gsub function
+us_pop$Population <- gsub('\\[[^]]*\\]', '', us_pop$Population)
+
+
 ###Prepping the subset of COVID-19 data for the U.S. states and merging it
 ###with population by state
 

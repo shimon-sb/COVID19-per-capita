@@ -4,6 +4,49 @@
 library(rvest)
 library(dplyr)
 library(stringr)
+library(lubridate)
+
+###Extracting the coronavirus cases by country from the Johns Hopkins site
+
+#First, pull the latest update from https://github.com/CSSEGISandData/COVID-19.git
+#and set the working directory to wherever you have downloaded these files
+#This block of code will then locate and load the most recent daily report file:
+setwd("csse_covid_19_data/csse_covid_19_daily_reports")
+covid_files <- list.files()
+covid_files <- mdy(covid_files)
+covid_files <- sort(covid_files, decreasing = TRUE)
+month_int <- month(covid_files[1])
+if(as.integer(month(covid_files[1])< 10)) month_int <- str_c("0", month_int)
+day_int <- day(covid_files[1])
+if(as.integer(day(covid_files[1])< 10)) day_int <- str_c("0", day_int)
+current_file <- str_c(month_int, day_int, year(covid_files[1]), sep = "-")
+current_file <- str_c(current_file, ".csv")
+covid_19_data <- read.csv(current_file)
+
+#Separately loading the US COVID-19 data from the more-detailed US daily file
+setwd("../..")
+setwd("csse_covid_19_data/csse_covid_19_daily_reports_us")
+covid_19_US <- read.csv(current_file)
+
+
+#Collapsing the data across states/provinces/etc within countries
+covid_19_by_country <- covid_19_data %>% group_by(., Country_Region) %>%
+  summarize(., Cases = sum(Confirmed), Deaths = sum(Deaths)) %>%
+  ungroup(.)
+names(covid_19_by_country) = c("Country", "Cases", "Deaths")
+
+#Fixing a few country names in the COVID-19 dataset
+covid_19_by_country$Country <- sub('US', 'United States', covid_19_by_country$Country)
+covid_19_by_country$Country <- sub("\\*", "", covid_19_by_country$Country)
+covid_19_by_country$Country <- sub("Holy See", "Vatican City", covid_19_by_country$Country)
+covid_19_by_country$Country <- sub("Korea, South", "South Korea", covid_19_by_country$Country)
+covid_19_by_country$Country <- sub("Timor-Leste", "East Timor", covid_19_by_country$Country)
+covid_19_by_country$Country <- sub("Czechia", "Czech Republic", covid_19_by_country$Country)
+covid_19_by_country$Country <- sub("Cote d'Ivoire", "Ivory Coast", covid_19_by_country$Country)
+covid_19_by_country$Country <- sub("Cabo Verde", "Cape Verde", covid_19_by_country$Country)
+covid_19_by_country$Country <- sub("Congo (Brazzaville)", "Congo", covid_19_by_country$Country)
+covid_19_by_country$Country <- sub("Congo (Kinshasa)", "DR Congo", covid_19_by_country$Country)
+
 
 ###Extracting the population values for individual countries
 
@@ -50,49 +93,18 @@ pop_by_country <- global_pop %>% group_by(., country_pooled) %>%
   ungroup(.)
 names(pop_by_country) <- c("Country", "Population")
 
-###Extracting the coronavirus cases by country from the Johns Hopkins site
 
-#First, pull the latest update from https://github.com/CSSEGISandData/COVID-19.git
-#and set the working directory to wherever you have downloaded these files
-#This block of code will then locate and load the most recent daily report file:
-setwd("csse_covid_19_data/csse_covid_19_daily_reports")
-covid_files <- list.files()
-#File names are simply the date of upload, in MM-DD-YYYY format, so a decreasing
-#sort will put the latest file at the top of the list (after the ReadMe)
-covid_files <- str_sort(covid_files, decreasing = TRUE)
-current_file <- covid_files[2]
-covid_19_data <- read.csv(current_file)
-
-#Collapsing the data across states/provinces/etc within countries
-covid_19_by_country <- covid_19_data %>% group_by(., Country_Region) %>%
-  summarize(., Cases = sum(Confirmed), Deaths = sum(Deaths)) %>%
-  ungroup(.)
-names(covid_19_by_country) = c("Country", "Cases", "Deaths")
-
-#Fixing a few country names in the COVID-19 dataset
-covid_19_by_country$Country <- sub('US', 'United States', covid_19_by_country$Country)
-covid_19_by_country$Country <- sub("\\*", "", covid_19_by_country$Country)
-covid_19_by_country$Country <- sub("Holy See", "Vatican City", covid_19_by_country$Country)
-covid_19_by_country$Country <- sub("Korea, South", "South Korea", covid_19_by_country$Country)
-covid_19_by_country$Country <- sub("Timor-Leste", "East Timor", covid_19_by_country$Country)
-covid_19_by_country$Country <- sub("Czechia", "Czech Republic", covid_19_by_country$Country)
-covid_19_by_country$Country <- sub("Cote d'Ivoire", "Ivory Coast", covid_19_by_country$Country)
-covid_19_by_country$Country <- sub("Cabo Verde", "Cape Verde", covid_19_by_country$Country)
-covid_19_by_country$Country <- sub("Congo (Brazzaville)", "Congo", covid_19_by_country$Country)
-covid_19_by_country$Country <- sub("Congo (Kinshasa)", "DR Congo", covid_19_by_country$Country)
-
-#Merging COVID-19 data with population data
+##Merging COVID-19 data with population data
 global_merged <- merge(pop_by_country, covid_19_by_country, by = "Country", all = TRUE)
 global_merged <- na.omit(global_merged)
 
-#Computing the per capita rates of incidence and death (and their inverses)
+#Calculating various summary statistics, including the per capita rates of
+#incidence and death (and their inverses)
 global_merged$Cases_pc <- global_merged$Cases / global_merged$Population
 global_merged$Deaths_pc <- global_merged$Deaths / global_merged$Population
 global_merged$Cases_1_per <- 1 / global_merged$Cases_pc
 global_merged$Deaths_1_per <- 1 / global_merged$Deaths_pc
 global_merged$pct_total_cs <- global_merged$Cases / sum(global_merged$Cases)
-
-#Calculating rate of deaths per number of confirmed cases
 global_merged$death_rate = global_merged$Deaths / global_merged$Cases
 
 ###Extracting population data for states in the US
@@ -115,8 +127,7 @@ us_pop$Population <- gsub('\\[[^]]*\\]', '', us_pop$Population)
 ###Prepping the subset of COVID-19 data for the U.S. states and merging it
 ###with population by state
 
-covid_19_us <- subset(covid_19_data, Country_Region == "US")
-us_by_state <- covid_19_us %>% group_by(., Province_State) %>%
+us_by_state <- covid_19_US %>% group_by(., Province_State) %>%
   summarize(., Cases = sum(Confirmed), Deaths = sum(Deaths)) %>%
   ungroup(.)
 names(us_by_state) <- c("State", "Cases", "Deaths")

@@ -1,6 +1,6 @@
 ###Coronavirus Time Series Data Wrangling
-#The purpose of this file is load the COVID-19 time series data from
-#Johns Hopkins and wrangle the data into a more manageable form. This will allow
+#The purpose of this file is to load the COVID-19 time series data from
+#Johns Hopkins and wrangle it into a more manageable form. This will allow
 #the calculation of simple stats like daily increases, etc., by country or U.S.
 #state and the creation of plots of the curves for cases, deaths etc.
 
